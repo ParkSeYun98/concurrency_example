@@ -8,6 +8,6 @@ class ConcurrencyExampleApplicationTests {
 
     @Test
     void contextLoads() {
-    }
 
+    }
 }
