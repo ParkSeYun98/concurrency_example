@@ -65,6 +65,9 @@ class TicketServiceTest {
     @Test
     @DisplayName("멀티쓰레드 환경에서 동시 티켓팅 : Race Condition 발생")
     void Test2() throws InterruptedException {
+        // 시작 시간 기록
+        long startTime = System.currentTimeMillis();
+
         int threadCnt = 100;
 
         // 스레드 풀 객체 : 32개의 스레드 관리
@@ -91,6 +94,13 @@ class TicketServiceTest {
 
         Ticket ticket = ticketRepository.findById(1L)
                 .orElseThrow(() -> new IllegalArgumentException("해당하는 티켓이 존재하지 않습니다."));
+
+        // 종료 시간 기록
+        long endTime = System.currentTimeMillis();
+
+        // 소요 시간 계산
+        long duration = endTime - startTime;
+        System.out.println("Test duration: " + duration + " ms");
 
         assertThat(ticket.getAmount()).isEqualTo(0);
     }
