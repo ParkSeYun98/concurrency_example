@@ -14,7 +14,7 @@ public class TicketService {
     private final TicketRepository ticketRepository;
 
     @Transactional
-    public void ticketing(Long ticketId) {
+    public synchronized void ticketing(Long ticketId) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 티켓이 존재하지 않습니다."));
 
