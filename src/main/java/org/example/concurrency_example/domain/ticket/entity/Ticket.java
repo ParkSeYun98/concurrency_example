@@ -23,10 +23,11 @@ public class Ticket {
         this.amount = amount;
     }
 
-    public void decreaseTicketAmount() {
-        if(this.amount == 0)
-            throw new IllegalArgumentException("예매 마감!");
+    public void decreaseTicketAmount(Long quantity) {
+        if(this.amount - quantity < 0) {
+            throw new RuntimeException("재고는 0개 미만이 될 수 없습니다");
+        }
 
-        this.amount--;
+        this.amount -= quantity;
     }
 }

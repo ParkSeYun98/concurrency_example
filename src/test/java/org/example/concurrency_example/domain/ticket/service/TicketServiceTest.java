@@ -1,5 +1,6 @@
 package org.example.concurrency_example.domain.ticket.service;
 
+import org.assertj.core.api.Assertions;
 import org.example.concurrency_example.domain.ticket.entity.Ticket;
 import org.example.concurrency_example.domain.ticket.repository.TicketRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,37 +29,16 @@ class TicketServiceTest {
 
     @BeforeEach
     public void init() {
-        ticketRepository.save(new Ticket(1L, ticketAmount));
+        ticketRepository.saveAndFlush(new Ticket(1L, ticketAmount));
     }
 
     @Test
-    @DisplayName("순차적 티케팅")
+    @DisplayName("티켓 재고 감소")
     void Test1() {
-        // given
-        Ticket findTicket = ticketRepository.findById(1L)
-                .orElseThrow(() -> new IllegalArgumentException("해당 아이디에 맞는 티켓을 찾지 못했습니다."));
+        ticketService.ticketing(1L, 1L);
 
-        AtomicInteger successCount = new AtomicInteger();
-        AtomicInteger failCount = new AtomicInteger();
-
-        // when
-        for (int i=0; i<memberCount; i++) {
-            try {
-                ticketService.ticketing(findTicket.getId());
-                successCount.incrementAndGet();
-            } catch (Exception e) {
-                failCount.incrementAndGet();
-            }
-        }
-
-        System.out.println("successCount = " + successCount);
-        System.out.println("failCount = " + failCount);
-
-        Ticket updatedTicket = ticketRepository.findById(1L)
-                .orElseThrow(() -> new IllegalArgumentException("아이디에 해당하는 티켓이 존재하지 않습니다."));
-
-        // then
-        assertThat(updatedTicket.getAmount()).isEqualTo(0);
+        Ticket ticket = ticketRepository.findById(1L).orElseThrow();
+        Assertions.assertThat(ticket.getAmount()).isEqualTo(99);
     }
 
     @Test
@@ -80,7 +59,7 @@ class TicketServiceTest {
             // 동시 티케팅
             executorService.submit(() -> {
                 try {
-                    ticketService.ticketing(1L);
+                    ticketService.ticketing(1L, 1L);
                 }
                 finally {
                     // 각 스레드의 작업 종료 명시
