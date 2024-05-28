@@ -14,6 +14,6 @@ import java.util.Optional;
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query(value = "select t from Ticket t where t.id = :id")
+    @Query(value = "select t from Ticket t where t.id = :ticketId")
     Optional<Ticket> findByIdOnPessimisticLock(@Param("ticketId") Long ticketId);
 }

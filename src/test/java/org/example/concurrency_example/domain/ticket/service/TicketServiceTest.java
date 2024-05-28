@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,12 +34,33 @@ class TicketServiceTest {
     }
 
     @Test
-    @DisplayName("티켓 재고 감소")
+    @DisplayName("순차적 티케팅")
     void Test1() {
-        ticketService.ticketing(1L, 1L);
+        // given
+        Ticket findTicket = ticketRepository.findById(1L)
+                .orElseThrow(() -> new IllegalArgumentException("해당 아이디에 맞는 티켓을 찾지 못했습니다."));
 
-        Ticket ticket = ticketRepository.findById(1L).orElseThrow();
-        Assertions.assertThat(ticket.getAmount()).isEqualTo(99);
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger failCount = new AtomicInteger();
+
+        // when
+        for (int i=0; i<memberCount; i++) {
+            try {
+                ticketService.ticketing(findTicket.getId(), 1L);
+                successCount.incrementAndGet();
+            } catch (Exception e) {
+                failCount.incrementAndGet();
+            }
+        }
+
+        System.out.println("successCount = " + successCount);
+        System.out.println("failCount = " + failCount);
+
+        Ticket updatedTicket = ticketRepository.findById(1L)
+                .orElseThrow(() -> new IllegalArgumentException("아이디에 해당하는 티켓이 존재하지 않습니다."));
+
+        // then
+        assertThat(updatedTicket.getAmount()).isEqualTo(0);
     }
 
     @Test
