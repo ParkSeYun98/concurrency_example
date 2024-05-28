@@ -34,7 +34,6 @@ dependencies {
     // 테스트 Lombok
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
-
 }
 
 tasks.named('test') {
