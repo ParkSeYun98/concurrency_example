@@ -29,7 +29,7 @@ class TicketServiceTest {
 
     @BeforeEach
     public void init() {
-        ticketRepository.save(new Ticket(1L, ticketAmount));
+        ticketRepository.save(new Ticket(1L, ticketAmount, 1L));
     }
 
     @Test
@@ -80,9 +80,10 @@ class TicketServiceTest {
             // 동시 티케팅
             executorService.submit(() -> {
                 try {
-                    ticketService.ticketing(1L);
-                }
-                finally {
+                    ticketService.ticketingByOptimisticLock(1L);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                } finally {
                     // 각 스레드의 작업 종료 명시
                     countDownLatch.countDown();
                 }

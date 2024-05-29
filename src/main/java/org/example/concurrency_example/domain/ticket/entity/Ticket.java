@@ -17,11 +17,17 @@ public class Ticket {
 
     private int amount;
 
-    @Builder
-    public Ticket(Long id, int amount) {
+    @Version
+    private Long version;
+
+    public Ticket(Long id, int amount, Long version) {
         this.id = id;
         this.amount = amount;
+        this.version = version;
     }
+
+    @Builder
+
 
     public void decreaseTicketAmount() {
         if(this.amount == 0)
