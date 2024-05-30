@@ -1,5 +1,6 @@
 package org.example.concurrency_example.domain.ticket.service;
 
+import jakarta.persistence.EntityManager;
 import org.example.concurrency_example.domain.ticket.entity.Ticket;
 import org.example.concurrency_example.domain.ticket.repository.TicketRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -18,6 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 class TicketServiceTest {
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Autowired
     private TicketRepository ticketRepository;
@@ -84,7 +89,9 @@ class TicketServiceTest {
             // 동시 티케팅
             executorService.submit(() -> {
                 try {
-                    ticketService.ticketing(ticketList.get(0).getId());
+                    ticketService.ticketingWithRedisson(ticketList.get(0).getId());
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 } finally {
                     // 각 스레드의 작업 종료 명시
                     countDownLatch.countDown();
@@ -106,5 +113,7 @@ class TicketServiceTest {
         System.out.println("Test duration: " + duration + " ms");
 
         assertThat(ticket.getAmount()).isEqualTo(0);
+
+        entityManager.flush();
     }
 }
