@@ -3,6 +3,7 @@ package org.example.concurrency_example.domain.ticket.service;
 import lombok.RequiredArgsConstructor;
 import org.example.concurrency_example.domain.ticket.entity.Ticket;
 import org.example.concurrency_example.domain.ticket.repository.TicketRepository;
+import org.example.concurrency_example.domain.ticket.retry.Retry;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ public class TicketService {
 
     private final TicketRepository ticketRepository;
 
+    @Retry
     @Transactional
     public void ticketing(Long ticketId) {
         Ticket ticket = ticketRepository.findByIdOnOptimisticLock(ticketId)
@@ -25,7 +27,7 @@ public class TicketService {
     // update 실패 대비
     public void ticketingByOptimisticLock(Long ticketId) throws InterruptedException {
         int retryCount = 0;
-        int maxRetries = 10; // 재시도 횟수 제한 설정
+        int maxRetries = 1000; // 재시도 횟수 제한 설정
 
         while (retryCount < maxRetries) {
             try {
@@ -33,7 +35,7 @@ public class TicketService {
                 break;
             } catch (OptimisticLockingFailureException e) {
                 retryCount++;
-                Thread.sleep(50); // 지수 백오프 전략도 고려 가능
+                Thread.sleep(100); // 지수 백오프 전략도 고려 가능
             }
         }
 

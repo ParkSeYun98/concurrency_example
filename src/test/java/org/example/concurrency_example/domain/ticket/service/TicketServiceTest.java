@@ -1,5 +1,6 @@
 package org.example.concurrency_example.domain.ticket.service;
 
+import jakarta.transaction.Transactional;
 import org.example.concurrency_example.domain.ticket.entity.Ticket;
 import org.example.concurrency_example.domain.ticket.repository.TicketRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,6 +31,7 @@ class TicketServiceTest {
 
     @BeforeEach
     public void init() {
+        ticketRepository.deleteAll(); // 기존 데이터를 삭제하고
         ticketRepository.save(new Ticket(1L, ticketAmount, 1L));
     }
 
@@ -76,13 +79,13 @@ class TicketServiceTest {
         // 각 스레드의 작업이 종료될 때까지 기다리는 동기화 수행
         CountDownLatch countDownLatch = new CountDownLatch(threadCnt);
 
+        List<Ticket> ticketList = ticketRepository.findAll();
+
         for(int i=0; i<threadCnt; i++) {
             // 동시 티케팅
             executorService.submit(() -> {
                 try {
-                    ticketService.ticketingByOptimisticLock(1L);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    ticketService.ticketing(ticketList.get(0).getId());
                 } finally {
                     // 각 스레드의 작업 종료 명시
                     countDownLatch.countDown();
@@ -93,7 +96,7 @@ class TicketServiceTest {
         // 메인 스레드는 countDownLatch의 count가 0이 될 때 까지 기다린다.
         countDownLatch.await();
 
-        Ticket ticket = ticketRepository.findById(1L)
+        Ticket ticket = ticketRepository.findById(ticketList.get(0).getId())
                 .orElseThrow(() -> new IllegalArgumentException("해당하는 티켓이 존재하지 않습니다."));
 
         // 종료 시간 기록
